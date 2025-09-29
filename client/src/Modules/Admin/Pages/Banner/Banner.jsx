@@ -6,10 +6,10 @@ const BannerAdmin = () => {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/banner/`;
-  const MEDIA_URL = import.meta.env.VITE_MEDIA_BASE_URL;
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/banners/`;
 
   // Fetch all banners
   const fetchBanners = async () => {
@@ -25,6 +25,20 @@ const BannerAdmin = () => {
     fetchBanners();
   }, []);
 
+  // Handle file selection & preview
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setPreview(null);
+    }
+  };
+
   // Upload new banner
   const handleUpload = async (e) => {
     e.preventDefault();
@@ -33,6 +47,7 @@ const BannerAdmin = () => {
       return;
     }
     setLoading(true);
+
     const formData = new FormData();
     formData.append("title", title);
     formData.append("subtitle", subtitle);
@@ -42,9 +57,11 @@ const BannerAdmin = () => {
       await axios.post(API_URL, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
+      // Reset form and preview
       setTitle("");
       setSubtitle("");
       setFile(null);
+      setPreview(null);
       fetchBanners();
     } catch (err) {
       console.error(err);
@@ -63,9 +80,6 @@ const BannerAdmin = () => {
       console.error(err);
     }
   };
-
-  const getImageUrl = (imgPath) =>
-    imgPath.startsWith("http") ? imgPath : `${MEDIA_URL}${imgPath}`;
 
   return (
     <div className="p-8">
@@ -93,7 +107,7 @@ const BannerAdmin = () => {
         <input
           type="file"
           accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
+          onChange={handleFileChange}
           className="border p-2 rounded"
         />
         <button
@@ -105,12 +119,24 @@ const BannerAdmin = () => {
         </button>
       </form>
 
+      {/* Preview */}
+      {preview && (
+        <div className="mb-6">
+          <p className="mb-2 font-semibold">Preview:</p>
+          <img
+            src={preview}
+            alt="Preview"
+            className="w-64 h-48 object-cover border rounded"
+          />
+        </div>
+      )}
+
       {/* Banner List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {banners.map((banner) => (
           <div key={banner.id} className="border rounded overflow-hidden relative">
             <img
-              src={getImageUrl(banner.image)}
+              src={banner.image_url || banner.image}
               alt={banner.title}
               className="w-full h-48 object-cover"
             />

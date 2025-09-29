@@ -1,18 +1,51 @@
-// src/Modules/Homepages/Layout/Banner.jsx
-import React from "react";
+// src/Modules/Homepages/Pages/Banner.jsx
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const Banner = ({ title = "Welcome to Putsf", subtitle = "", bgImage = "" }) => {
-  const style = bgImage
-    ? { backgroundImage: `url(${bgImage})`, backgroundSize: "cover", backgroundPosition: "center" }
-    : { backgroundColor: "#BFDBFE" }; // fallback blue-200
+const Banner = () => {
+  const [banners, setBanners] = useState([]);
+const API_URL = `${import.meta.env.VITE_API_BASE_URL}/banners/`;
+  const MEDIA_URL = import.meta.env.VITE_MEDIA_BASE_URL;
+
+  // Fetch banners from backend
+  const fetchBanners = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      setBanners(res.data);
+    } catch (err) {
+      console.error("Failed to fetch banners:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchBanners();
+  }, []);
+
+  const getImageUrl = (imgPath) =>
+    imgPath?.startsWith("http") ? imgPath : `${MEDIA_URL}${imgPath}`;
 
   return (
-    <section
-      className="h-64 flex flex-col items-center justify-center text-white mb-8"
-      style={style}
-    >
-      <h2 className="text-4xl font-bold">{title}</h2>
-      {subtitle && <p className="mt-2 text-lg">{subtitle}</p>}
+    <section className="w-full relative pt-24 bg-white">
+      <div className="container max-w-7xl mx-auto px-4">
+        {banners.length > 0 ? (
+          banners.map((banner) => (
+            <div key={banner.id} className="w-full relative mb-6">
+              <img
+                src={getImageUrl(banner.image)}
+                alt={banner.title}
+                className="w-full object-contain rounded-xl shadow-lg animate-fadeZoom animate-float"
+              />
+              {/* Optional overlay for title/subtitle */}
+              <div className="absolute bottom-4 left-4 text-white">
+                <h2 className="text-2xl font-bold">{banner.title}</h2>
+                {banner.subtitle && <p className="text-lg">{banner.subtitle}</p>}
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500">No banners available</p>
+        )}
+      </div>
     </section>
   );
 };

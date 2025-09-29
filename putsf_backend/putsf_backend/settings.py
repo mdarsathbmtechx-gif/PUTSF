@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'accounts',
     'gallery',
     'banner',
+    "blog",
     'rest_framework',
 ]
 
@@ -126,9 +127,10 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # -----------------------------
 # Media Files
 # -----------------------------
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
 
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+DEBUG = True 
 # -----------------------------
 # CORS
 # -----------------------------
@@ -137,7 +139,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost','PUTSF>.onrender.com']
 
 # -----------------------------
 # Custom User Model

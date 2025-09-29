@@ -2,13 +2,16 @@ from rest_framework import serializers
 from .models import Banner
 
 class BannerSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Banner
-        fields = ["id", "image", "uploaded_at"]
+        fields = ['id', 'title', 'subtitle', 'image', 'image_url', 'created_at']
 
-    def to_representation(self, instance):
-        rep = super().to_representation(instance)
-        request = self.context.get("request")
-        if request:
-            rep["image"] = request.build_absolute_uri(instance.image.url)  # ✅ full URL
-        return rep
+    def get_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        elif obj.image:
+            return obj.image.url
+        return None

@@ -10,6 +10,7 @@ import Login from "../Modules/Admin/Auth/Login.jsx";
 import Dashboard from "../Modules/Admin/Pages/Dashboard/Dashboard.jsx";
 import Gallery from "../Modules/Admin/Pages/Gallery/Gallery.jsx";
 import BannerAdmin from "../Modules/Admin/Pages/Banner/Banner.jsx";
+import BlogAdmin from "../Modules/Admin/Pages/Blog/Blog.jsx";
 
 const AdminRoutes = () => {
   return (
@@ -22,7 +23,7 @@ const AdminRoutes = () => {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="gallery" element={<Gallery />} />
         <Route path="banner" element={<BannerAdmin />} />
-        <Route path="blogs" element={<div>Blogs Page</div>} />
+        <Route path="blogs" element={<BlogAdmin />} />
 
         {/* Redirect unknown admin paths to dashboard */}
         <Route path="*" element={<Navigate to="dashboard" />} />
