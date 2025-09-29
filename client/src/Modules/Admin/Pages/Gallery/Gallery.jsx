@@ -1,0 +1,158 @@
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
+const Gallery = () => {
+  const [images, setImages] = useState([]);
+  const [title, setTitle] = useState("");
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/gallery/`;
+  const MEDIA_URL = import.meta.env.VITE_MEDIA_BASE_URL;
+
+  // Helper to safely generate image URLs
+  const getImageUrl = (imgPath) => {
+    if (!imgPath) return "";
+    // If already a full URL, return as-is
+    if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) return imgPath;
+    // Otherwise, prepend MEDIA_URL safely
+    return `${MEDIA_URL.replace(/\/$/, "")}${imgPath.startsWith("/") ? imgPath : "/" + imgPath}`;
+  };
+
+  // Fetch images from API
+  const fetchImages = async () => {
+    try {
+      const res = await axios.get(API_URL);
+      setImages(res.data);
+    } catch (err) {
+      console.error("Error fetching images:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  // Handle file selection and preview
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    setFile(selectedFile);
+
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setPreview(null);
+    }
+  };
+
+  // Upload image
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file || !title) {
+      alert("Please provide a title and select an image.");
+      return;
+    }
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("image", file);
+
+    try {
+      await axios.post(API_URL, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setTitle("");
+      setFile(null);
+      setPreview(null);
+      fetchImages();
+    } catch (err) {
+      console.error("Error uploading image:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete image
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this image?")) return;
+    try {
+      await axios.delete(`${API_URL}${id}/`);
+      fetchImages();
+    } catch (err) {
+      console.error("Error deleting image:", err);
+    }
+  };
+
+  return (
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-6">Gallery</h1>
+
+      {/* Upload Form */}
+      <form
+        onSubmit={handleUpload}
+        className="mb-6 flex flex-col md:flex-row gap-4 items-center"
+      >
+        <input
+          type="text"
+          placeholder="Image Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="border p-2 rounded"
+        />
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          className="border p-2 rounded"
+        />
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          disabled={loading}
+        >
+          {loading ? "Uploading..." : "Upload"}
+        </button>
+      </form>
+
+      {/* Preview */}
+      {preview && (
+        <div className="mb-6">
+          <h3 className="font-semibold mb-2">Preview:</h3>
+          <img
+            src={preview}
+            alt="Preview"
+            className="w-48 h-48 object-cover border rounded"
+          />
+        </div>
+      )}
+
+      {/* Images Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {images.map((img) => (
+          <div key={img.id} className="border rounded overflow-hidden relative">
+            <img
+              src={getImageUrl(img.image)}
+              alt={img.title}
+              className="w-full h-48 object-cover"
+            />
+            <div className="p-2 flex justify-between items-center">
+              <h2 className="font-semibold">{img.title}</h2>
+              <button
+                onClick={() => handleDelete(img.id)}
+                className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 text-sm"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Gallery;
