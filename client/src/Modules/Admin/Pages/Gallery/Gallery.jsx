@@ -1,32 +1,22 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const Gallery = () => {
+const AdminGallery = () => {
   const [images, setImages] = useState([]);
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/gallery/`;
-  const MEDIA_URL = import.meta.env.VITE_MEDIA_BASE_URL;
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/gallery/images/`;
 
-  // Helper to safely generate image URLs
-  const getImageUrl = (imgPath) => {
-    if (!imgPath) return "";
-    // If already a full URL, return as-is
-    if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) return imgPath;
-    // Otherwise, prepend MEDIA_URL safely
-    return `${MEDIA_URL.replace(/\/$/, "")}${imgPath.startsWith("/") ? imgPath : "/" + imgPath}`;
-  };
-
-  // Fetch images from API
+  // Fetch all images
   const fetchImages = async () => {
     try {
       const res = await axios.get(API_URL);
       setImages(res.data);
     } catch (err) {
-      console.error("Error fetching images:", err);
+      console.error("Error fetching images:", err.response || err);
     }
   };
 
@@ -34,29 +24,23 @@ const Gallery = () => {
     fetchImages();
   }, []);
 
-  // Handle file selection and preview
+  // Handle file input
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
-
     if (selectedFile) {
       const reader = new FileReader();
       reader.onloadend = () => setPreview(reader.result);
       reader.readAsDataURL(selectedFile);
-    } else {
-      setPreview(null);
-    }
+    } else setPreview(null);
   };
 
-  // Upload image
+  // Upload new image
   const handleUpload = async (e) => {
     e.preventDefault();
-    if (!file || !title) {
-      alert("Please provide a title and select an image.");
-      return;
-    }
-    setLoading(true);
+    if (!file || !title) return alert("Provide title and image");
 
+    setLoading(true);
     const formData = new FormData();
     formData.append("title", title);
     formData.append("image", file);
@@ -70,7 +54,7 @@ const Gallery = () => {
       setPreview(null);
       fetchImages();
     } catch (err) {
-      console.error("Error uploading image:", err);
+      console.error("Upload error:", err.response || err);
     } finally {
       setLoading(false);
     }
@@ -78,23 +62,22 @@ const Gallery = () => {
 
   // Delete image
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this image?")) return;
+    if (!window.confirm("Delete this image?")) return;
     try {
       await axios.delete(`${API_URL}${id}/`);
       fetchImages();
     } catch (err) {
-      console.error("Error deleting image:", err);
+      console.error("Delete error:", err.response || err);
     }
   };
 
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-6">Gallery</h1>
+      <h1 className="text-2xl font-bold mb-6">Admin Gallery</h1>
 
-      {/* Upload Form */}
       <form
         onSubmit={handleUpload}
-        className="mb-6 flex flex-col md:flex-row gap-4 items-center"
+        className="mb-6 flex flex-col md:flex-row gap-4"
       >
         <input
           type="text"
@@ -118,24 +101,19 @@ const Gallery = () => {
         </button>
       </form>
 
-      {/* Preview */}
       {preview && (
-        <div className="mb-6">
-          <h3 className="font-semibold mb-2">Preview:</h3>
-          <img
-            src={preview}
-            alt="Preview"
-            className="w-48 h-48 object-cover border rounded"
-          />
-        </div>
+        <img
+          src={preview}
+          alt="Preview"
+          className="w-48 h-48 object-cover mb-6"
+        />
       )}
 
-      {/* Images Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {images.map((img) => (
           <div key={img.id} className="border rounded overflow-hidden relative">
             <img
-              src={getImageUrl(img.image)}
+              src={img.image_url}
               alt={img.title}
               className="w-full h-48 object-cover"
             />
@@ -155,4 +133,4 @@ const Gallery = () => {
   );
 };
 
-export default Gallery;
+export default AdminGallery;

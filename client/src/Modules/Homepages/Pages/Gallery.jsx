@@ -1,21 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
-const Gallery = () => {
+const HomeGallery = () => {
   const [images, setImages] = useState([]);
-  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/gallery/`;
-  const MEDIA_URL = import.meta.env.VITE_MEDIA_BASE_URL;
+  const API_URL = `${import.meta.env.VITE_API_BASE_URL}/gallery/images/`;
 
-  // Helper to safely build image URLs
-  const getImageUrl = (imgPath) => {
-    if (!imgPath) return "";
-    // If imgPath is already a full URL, return it
-    if (imgPath.startsWith("http://") || imgPath.startsWith("https://")) return imgPath;
-    // Otherwise, prepend MEDIA_URL safely
-    return `${MEDIA_URL.replace(/\/$/, "")}${imgPath.startsWith("/") ? imgPath : "/" + imgPath}`;
-  };
-
-  // Fetch images
   const fetchImages = async () => {
     try {
       const res = await axios.get(API_URL);
@@ -37,12 +26,12 @@ const Gallery = () => {
         {images.map((img) => (
           <div key={img.id} className="border rounded overflow-hidden">
             <img
-              src={getImageUrl(img.image)} // Safe URL
+              src={img.image_url || "/placeholder.png"}
               alt={img.title}
               className="w-full h-48 object-cover"
             />
-            <div className="p-2">
-              <h2 className="font-semibold text-center">{img.title}</h2>
+            <div className="p-2 text-center">
+              <h2 className="font-semibold">{img.title}</h2>
             </div>
           </div>
         ))}
@@ -51,4 +40,4 @@ const Gallery = () => {
   );
 };
 
-export default Gallery;
+export default HomeGallery;
